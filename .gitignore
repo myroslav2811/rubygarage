@@ -1,24 +1,2 @@
-
-
-# dependencies
-/view/node_modules
 /server/node_modules
-/view/.pnp
-.pnp.js
-
-# testing
-/coverage
-
-# production
-/view/build
-
-# misc
-/view/.DS_Store
-/view/.env.local
-/view/.env.development.local
-/view/.env.test.local
-/view/.env.production.local
-
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+/front/node_modules
