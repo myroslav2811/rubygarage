@@ -1,0 +1,22 @@
+.buttons-enter {
+    opacity: 0;
+}
+
+.buttons-enter-active {
+    opacity: 1;
+    transition: opacity 300ms;
+}
+
+.buttons-exit {
+    opacity: 1;
+}
+
+.buttons-exit-active {
+    opacity: 0;
+    transition: opacity 300ms;
+}
+
+.task-item:hover {
+    background-color: #fcfed6;
+    transition: background-color 400ms;
+}
