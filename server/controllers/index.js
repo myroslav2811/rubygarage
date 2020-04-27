@@ -14,5 +14,6 @@ module.exports = {
     updateProject: require('./updateProject'),
     updateTask: require('./updateTask'),
     checkToken: require('./checkToken.js'),
-    logOut: require('./logOut')
+    logOut: require('./logOut'),
+    updateTaskPriority: require('./updateTaskPriority')
 }

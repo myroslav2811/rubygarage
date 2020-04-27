@@ -3,6 +3,8 @@ import { useHistory } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { DndProvider } from 'react-dnd';
+import Backend from 'react-dnd-html5-backend';
 
 import axios from '../../axios/axios';
 import Project from '../Project/Project';
@@ -108,28 +110,30 @@ const Main = ({ isAuth }) => {
 
     return (
         <>
-            {!projects ? <Loading /> : <div>
-                {projects.length === 0
-                    ? <p style={noProjectStyle}>There are no projects, add new one</p>
-                    : projects.map(item => <Project key={item._id}
-                        id={item._id}
-                        name={item.name}
-                        setProjectName={setProjectName}
-                        removeProject={removeProject}
-                        setEditId={setEditId}
-                        setModalProjectShow={setModalProjectShow}
-                    />)}
-                <Button style={buttonStyle} onClick={openProjectModal}><span style={plusStyle}>{plus}</span> Add TODO List </Button>
-            </div>}
-            <ModalWindow show={modalProjectShow}
-                onHide={closeModalProject}
-                addProject={addNewProject}
-                editId={editId}
-                setEditId={setEditId}
-                projectName={projectName}
-                setProjectName={setProjectName}
-                updateProject={updateProject}
-            />
+            <DndProvider backend={Backend}>
+                {!projects ? <Loading /> : <div>
+                    {projects.length === 0
+                        ? <p style={noProjectStyle}>There are no projects, add new one</p>
+                        : projects.map(item => <Project key={item._id}
+                            id={item._id}
+                            name={item.name}
+                            setProjectName={setProjectName}
+                            removeProject={removeProject}
+                            setEditId={setEditId}
+                            setModalProjectShow={setModalProjectShow}
+                        />)}
+                    <Button style={buttonStyle} onClick={openProjectModal}><span style={plusStyle}>{plus}</span> Add TODO List </Button>
+                </div>}
+                <ModalWindow show={modalProjectShow}
+                    onHide={closeModalProject}
+                    addProject={addNewProject}
+                    editId={editId}
+                    setEditId={setEditId}
+                    projectName={projectName}
+                    setProjectName={setProjectName}
+                    updateProject={updateProject}
+                />
+            </DndProvider>
         </>
     );
 };

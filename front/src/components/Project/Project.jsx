@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, FormControl, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPen, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { faCalendarAlt, faTrashAlt } from '@fortawesome/free-regular-svg-icons';
-import { DndProvider } from 'react-dnd';
-import Backend from 'react-dnd-html5-backend';
+import { useDrop } from 'react-dnd';
 import update from 'immutability-helper';
 
 
@@ -69,16 +68,39 @@ const buttonStyle = {
     width: '170px'
 }
 
+
+
 const Project = ({ id, name, removeProject, setProjectName, setEditId, setModalProjectShow }) => {
 
     const [tasks, setTasks] = useState(null);
     const [taskName, setTaskName] = useState('');
     const [editTaskId, setEditTaskId] = useState(null);
 
+    const sortTasks = (tasks) => {
+        tasks.sort((a, b) => a.priority > b.priority ? 1 : -1);
+        return tasks;
+    }
+
+    const changePriority = (arr) => {
+        const array = arr || tasks;
+        const changedTasks = array.map((item, index) => {
+            item.priority = index + 1;
+            return item;
+        })
+        axios.post('/update-priority', { tasks: changedTasks })
+            .then(res => {
+                console.log(res);
+            })
+            .catch(err => {
+                console.log(err);
+            })
+        setTasks(changedTasks);
+    }
+
     useEffect(() => {
         axios.get('/tasks/' + id)
             .then(res => {
-                setTasks(res.data.tasks);
+                setTasks(sortTasks(res.data.tasks));
             })
             .catch()
     }, [id])
@@ -90,7 +112,7 @@ const Project = ({ id, name, removeProject, setProjectName, setEditId, setModalP
             status
         })
             .then(res => {
-                setTasks(res.data.tasks)
+                setTasks(sortTasks(res.data.tasks))
             })
             .catch(err => {
                 console.log(err)
@@ -124,7 +146,6 @@ const Project = ({ id, name, removeProject, setProjectName, setEditId, setModalP
 
     const addNewTask = () => {
         if (taskName.trim().length > 0) {
-            setTasks(null);
             axios.post('/tasks', {
                 projectId: id,
                 name: taskName.trim(),
@@ -132,7 +153,7 @@ const Project = ({ id, name, removeProject, setProjectName, setEditId, setModalP
             })
                 .then(res => {
                     setTaskName('');
-                    setTasks(res.data.tasks);
+                    setTasks(sortTasks(res.data.tasks));
                 })
                 .catch(err => {
                     console.log(err);
@@ -143,7 +164,7 @@ const Project = ({ id, name, removeProject, setProjectName, setEditId, setModalP
     const deleteTask = (taskId) => {
         axios.delete(`/task/${id}/${taskId}`)
             .then(res => {
-                setTasks(res.data.tasks);
+                changePriority(sortTasks(res.data.tasks));
             })
             .catch(err => {
                 console.log(err);
@@ -152,7 +173,6 @@ const Project = ({ id, name, removeProject, setProjectName, setEditId, setModalP
 
     const editTask = () => {
         if (taskName.trim().length > 0) {
-            setTasks(null);
             axios.post('/update-task', {
                 id: editTaskId,
                 projectId: id,
@@ -161,7 +181,7 @@ const Project = ({ id, name, removeProject, setProjectName, setEditId, setModalP
                 .then(res => {
                     setTaskName('');
                     setEditTaskId(null);
-                    setTasks(res.data.tasks);
+                    setTasks(sortTasks(res.data.tasks));
                 })
                 .catch(err => {
                     console.log(err);
@@ -169,20 +189,30 @@ const Project = ({ id, name, removeProject, setProjectName, setEditId, setModalP
         }
     }
 
-    const moveTask = useCallback(
-        (dragIndex, hoverIndex) => {
-            const dragTask = tasks[dragIndex]
-            setTasks(
-                update(tasks, {
-                    $splice: [
-                        [dragIndex, 1],
-                        [hoverIndex, 0, dragTask],
-                    ],
-                }),
-            )
-        },
-        [tasks],
-    )
+    const onDragEnd = () => {
+        changePriority();
+    }
+
+    const moveTask = (id, atIndex) => {
+        const { task, index } = findTask(id)
+        setTasks(
+            update(tasks, {
+                $splice: [
+                    [index, 1],
+                    [atIndex, 0, task],
+                ],
+            }),
+        )
+    }
+
+    const findTask = (id) => {
+        const task = tasks.filter((c) => `${c._id}` === id)[0]
+        return {
+            task,
+            index: tasks.indexOf(task),
+        }
+    }
+    const [, drop] = useDrop({ accept: 'task' })
 
     return (
         <Card style={cardStyle}>
@@ -226,23 +256,24 @@ const Project = ({ id, name, removeProject, setProjectName, setEditId, setModalP
                 ? <Loading />
                 : tasks.length === 0
                     ? <p style={{ textAlign: 'center', padding: '50px' }}>There are no tasks, add new one</p>
-                    : <DndProvider backend={Backend}>
-                        <div>
-                            {tasks.map((item, i) => (
-                                <Task
-                                    key={item._id}
-                                    id={item._id}
-                                    name={item.name}
-                                    status={item.status}
-                                    deleteTask={deleteTask}
-                                    changeStatus={changeStatus}
-                                    setEditTaskId={setEditTaskId}
-                                    setTaskName={setTaskName}
-                                    moveTask={moveTask}
-                                    index={i} />
-                            ))}
-                        </div>
-                    </DndProvider>}
+                    : <div ref={drop}>
+                        {tasks.map((item, i) => (
+                            <Task
+                                key={item._id}
+                                id={item._id}
+                                name={item.name}
+                                status={item.status}
+                                deleteTask={deleteTask}
+                                changeStatus={changeStatus}
+                                setEditTaskId={setEditTaskId}
+                                setTaskName={setTaskName}
+                                moveTask={moveTask}
+                                index={i}
+                                findTask={findTask}
+                                onDragEnd={onDragEnd}
+                                priority={item.priority} />
+                        ))}
+                    </div>}
 
         </Card>
     );

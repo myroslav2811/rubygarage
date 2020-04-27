@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const cors = require('cors');
 
-const { signUp, auth, refreshTokens, getProjects, putProject, deleteProject, getTasks, putTask, deleteTask, changeTaskStatus, updateProject, updateTask, checkToken, logOut } = require('./controllers')
+const { signUp, auth, refreshTokens, getProjects, putProject, deleteProject, getTasks, putTask, deleteTask, changeTaskStatus, updateProject, updateTask, checkToken, logOut, updateTaskPriority } = require('./controllers')
 const { checkAuth } = require('./middleware');
 
 mongoose.connect('mongodb://localhost:27017/TODO', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false }, (err) => {
@@ -29,6 +29,7 @@ app.post('/task-status', checkAuth, changeTaskStatus);
 app.post('/update-project', checkAuth, updateProject);
 app.post('/update-task', checkAuth, updateTask);
 app.post('/logout', checkAuth, logOut);
+app.post('/update-priority', checkAuth, updateTaskPriority);
 
 
 app.get('/projects', checkAuth, getProjects);
